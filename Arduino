@@ -1,0 +1,53 @@
+class heartratemananger():
+    def __init__(self):
+        self.max_heartpluse_duty = 2000
+        self.counter = 1
+        self.data_effect = False
+        self.temp = []
+        for _ in range(21):
+            self.temp.append(time.perf_counter()*1000)
+        self.initarray()
+    def sum_(self):
+        if self.data_effect:
+            heart_rate=1200000/(self.temp[20]-self.temp[0])
+            print(heart_rate)
+        return (heart_rate,True)
+    def interrupt_(self):
+        self.temp[self.counter] = time.perf_counter()*1000
+        if self.counter == 0:
+            sub=self.temp[self.counter]-self.temp[20]
+        else:
+            sub=self.temp[self.counter]-self.temp[self.counter-1]
+        if sub > self.max_heartpluse_duty:
+            self.data_effect = False
+            self.counter = 0
+        if self.counter == 20 and self.data_effect:
+            self.counter = 0
+            self.sum_()
+        elif self.counter != 20 and self.data_effect:
+            self.counter+=1
+        else:
+            self.counter = 0
+            self.data_effect = True
+    def initarray(self):
+        for _ in self.temp:
+            _ = time.perf_counter()*1000
+
+import pip
+pip.main(['install','pyfirmata'])
+import time
+from pyfirmata import Arduino, util
+myboard = Arduino('/dev/cu.usbmodem14201')
+it = util.Iterator(myboard)
+it.start()
+analog_input = myboard.get_pin('d:2:i')
+analog_value = False
+analog_value_record = False
+record_time = 0
+heartratemananger_ = heartratemananger()
+while True:
+    analog_value = analog_input.read()
+    if(analog_value_record != analog_value):
+        analog_value_record = analog_value
+        if not (analog_value_record):
+            heartratemananger_.interrupt_()
