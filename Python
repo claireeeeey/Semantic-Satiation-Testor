@@ -1,0 +1,63 @@
+import nltk
+import re
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import pyphen
+import random
+
+rawTexts = "Text"
+Texts = rawTexts.replace("’m", " am").replace("’s", " is").\
+    replace("’re", " are").replace("’n", " not").\
+    replace("n’t", " not").replace("’ve", " have")
+tokenlist = nltk.pos_tag(nltk.word_tokenize(Texts))
+
+V_dict = {}
+
+Ntag = ["NN", "NNS", "NNP", "NNPS"]
+Vtag = ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]
+Adjtag = ["JJ", 'JJR', "JJS"]
+Advtag = ["RB", "RBR", "RBS"]
+
+def getDic(tag, value):
+    dict = {}
+    for i in tag:
+        dict[i] = value
+    return dict
+
+Ndict = getDic(Ntag, "noun")
+Vdict = getDic(Vtag, "verb")
+Adjdict = getDic(Adjtag, "adjective")
+Advdict = getDic(Advtag, "adverb")
+
+def fliter1(word):
+    return len(re.findall('[\u4e00-\u9fa5a-zA-Z\d]+', word)) != 0
+
+def fliter2(word_result, tag):
+    return word_result in tag.keys()
+
+result = ""
+for i in tokenlist:
+    temp_result = i[0]
+    if (fliter1(i[0])):
+        if (fliter2(i[1], Ndict) or fliter2(i[1], Vdict)
+                or fliter2(i[1], Adjdict) or fliter2(i[1], Advdict)):
+            analyzer = SentimentIntensityAnalyzer()
+            senti_result = analyzer.polarity_scores(i[0])
+            if (senti_result['compound'] != 0.5):
+                dic = pyphen.Pyphen(lang='nl_NL')
+                pyphen_result = dic.inserted(i[0])
+                segment = pyphen_result.split("-")
+                random.shuffle(segment)
+                x = ""
+                for r in segment:
+                    x += r
+                temp_result = x
+    result += temp_result
+    result += " "
+print (result.lower())
+
+import tkinter as tk
+root=tk.Tk()
+myLabel1 = tk.Message(
+    root, text = result.lower(), font=('Times New Roman', 30), width=800)
+myLabel1.pack()
+root.mainloop()
